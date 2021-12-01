@@ -2,6 +2,7 @@ from socket import socket
 import tkinter as tk
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
+import pickle
 
 class ChatPage(tk.Frame):
     '''Màn hình chat của client'''
@@ -54,7 +55,16 @@ class ChatPage(tk.Frame):
         while True:
             try:
                 msg = client_socket.recv(BUFSIZ).decode(FORMAT)
-                self.msg_list.insert(tk.END, msg)
+                
+                if msg == "tsillist":
+                    msg = client_socket.recv(BUFSIZ)
+                    data_recv = pickle.loads(msg)
+                    print(data_recv)
+                    for item in data_recv:
+                        self.msg_list.insert(tk.END, item)
+                    
+                else:
+                    self.msg_list.insert(tk.END, msg)
 
             # Possibly client has left the chat.
             except OSError:  

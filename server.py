@@ -2,6 +2,8 @@ from socket import AF_INET, socket, SOCK_STREAM
 import socket as sk
 from threading import Thread
 import tkinter as tk
+import api_network as api
+import pickle
 
 def accept_incoming_connections():
     '''Sets up handling for incoming clients'''
@@ -51,8 +53,19 @@ def handle_client(client):
             #In ra màn hình console server {msg} của client gửi tới server
             print(name, ': ', msg)
 
-            if msg == "USD to VND":
-                client.send(bytes("=> USD to VND: 23", FORMAT))
+            # if msg == "USD to VND":
+            #     client.send(bytes("=> USD to VND: 23", FORMAT))
+
+            reply = api.find_currency(msg)
+            
+            if (len(reply) == 5):
+                client.send(bytes("tsillist", FORMAT))
+                data_send = pickle.dumps(reply)
+                client.send(data_send)
+            # for item in reply:
+            #     print(item)
+            #     client.send(bytes(item, FORMAT))
+            
 
         except:
             '''Phát hiện client ngắt kết nối tới server'''
@@ -117,6 +130,8 @@ if __name__ == "__main__":
     FORMAT = "utf8"
     ip_address = ""
     
+    api.getDataFromAPI()
+
     #Khởi động server
     SERVER = socket(AF_INET, SOCK_STREAM)
     SERVER.bind(ADDR)
