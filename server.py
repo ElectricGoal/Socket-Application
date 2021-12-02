@@ -4,6 +4,7 @@ from threading import Thread
 import tkinter as tk
 import api_network as api
 import pickle
+import time
 
 def accept_incoming_connections():
     '''Sets up handling for incoming clients'''
@@ -78,6 +79,25 @@ def handle_client(client):
     #Client đóng
     client.close()
 
+def countdown(t):
+    '''Hàm đếm thời gian'''
+    while t: # while t > 0 for clarity 
+      time.sleep(1)
+      t -= 1
+
+def updateData():
+    '''Upadate data mới sau mỗi 30 phút'''
+
+    #Lúc bắt đầu khởi động, lấy data về
+    api.getDataFromAPI()
+
+    while True:
+        #Đếm ngược 30 phút
+        countdown(1800)
+
+        #Lấy data mới
+        api.getDataFromAPI()
+
 
 class ServerApp(tk.Tk):
     '''
@@ -130,12 +150,13 @@ if __name__ == "__main__":
     FORMAT = "utf8"
     ip_address = ""
     
-    api.getDataFromAPI()
-
     #Khởi động server
     SERVER = socket(AF_INET, SOCK_STREAM)
     SERVER.bind(ADDR)
     SERVER.listen(5)
+
+    DATA_THREAD = Thread(target=updateData)
+    DATA_THREAD.start()
     
     ACCEPT_THREAD = Thread(target=accept_incoming_connections)
     ACCEPT_THREAD.daemon = True
