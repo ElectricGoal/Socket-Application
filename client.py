@@ -3,35 +3,46 @@ import tkinter as tk
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import pickle
+from babel.dates import DateTimePattern
+from tkcalendar import Calendar, DateEntry
 
 class ChatPage(tk.Frame):
     '''Màn hình chat của client'''
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
-        
-        msg_frame = tk.Frame(self)
 
         # For the messages to be sent.
         self.my_msg = tk.StringVar()  
         self.my_msg.set("Type your messages here.")
+        
+        #Frame bên trái
+        left_frame = tk.Frame(self)
+        left_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
-        # To navigate through past messages.
+        msg_frame = tk.Frame(left_frame)
+        msg_frame.pack(fill=tk.BOTH, expand=True)
         scrollbar = tk.Scrollbar(msg_frame)
-        
-        #Khởi tạo Listbox hiển thị thông tin chat
-        self.msg_list = tk.Listbox(msg_frame, height=20, width=50,
-                              yscrollcommand=scrollbar.set, bg='light yellow')
+        self.msg_list = tk.Listbox(msg_frame, yscrollcommand=scrollbar.set, bg='light yellow')
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.msg_list.pack(side=tk.LEFT, fill=tk.BOTH)
-        self.msg_list.pack()
-        msg_frame.pack()
+        self.msg_list.pack(fill=tk.BOTH, expand=True)
         
-        #Khởi tạo ô nhập tin nhắn
-        entry_field = tk.Entry(self, textvariable=self.my_msg, width=100,)
-        # entry_field.bind("<Return>", self.send)
-        entry_field.pack()
-        send_button = tk.Button(self, text="Send", command=self.send)
+
+        entry_field = tk.Entry(left_frame, textvariable=self.my_msg)
+        entry_field.pack(fill=tk.BOTH)
+
+        send_button = tk.Button(left_frame, text="Send", command=self.send)
         send_button.pack()
+        
+        #Frame bên phải
+        right_frame = tk.Frame(self)
+        right_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
+
+        text_label = tk.Label(right_frame, text= "Choose a Date", background= 'gray61', foreground="white")
+        cal = DateEntry(right_frame, width= 16, background= "magenta3", foreground= "white",bd=2, date_pattern='dd/mm/y')
+        text_label.pack()
+        cal.pack()
+
+
     
     # event is passed by binders.
     def send(self):  
@@ -39,8 +50,9 @@ class ChatPage(tk.Frame):
         msg = self.my_msg.get()
 
         # Clears input field.
-        self.my_msg.set("")  
+        self.my_msg.set("") 
         client_socket.send(bytes(msg, "utf8"))
+        self.msg_list.insert(tk.END, "You: %s" %msg)
         if msg == "{quit}":
             client_socket.close()
             self.quit()
@@ -55,15 +67,26 @@ class ChatPage(tk.Frame):
         while True:
             try:
                 msg = client_socket.recv(BUFSIZ).decode(FORMAT)
-                
+
+                if msg == "yrotsih":
+                    msg = client_socket.recv(BUFSIZ)
+                    data_recv = pickle.loads(msg)
+                    self.msg_list.insert(tk.END, "Server: ")
+                    for items in data_recv:
+                        for item in items:
+                            self.msg_list.insert(tk.END, item)
+                        self.msg_list.insert(tk.END, "   ---------------------")
+                    continue
+
                 if msg == "tsillist":
                     msg = client_socket.recv(BUFSIZ)
                     data_recv = pickle.loads(msg)
-                    print(data_recv)
+                    self.msg_list.insert(tk.END, "Server: ")
                     for item in data_recv:
                         self.msg_list.insert(tk.END, item)
                     
                 else:
+                    self.msg_list.insert(tk.END, "Server: ")
                     self.msg_list.insert(tk.END, msg)
 
             # Possibly client has left the chat.

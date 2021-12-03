@@ -19,7 +19,7 @@ def getDataFromAPI():
     data = response.json()
 
     # Lấy thời gian hiện tại
-    data["date_time"] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+    data["date_time"] = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
 
     write_json(data)
 
@@ -67,7 +67,7 @@ def find_currency(currency):
             }
 
     if check == False:
-        print("Cannot find!")
+        return "   Cannot find"
 
     return exchange_data
 
@@ -76,18 +76,18 @@ def dictToDataSendClient(dict_data):
     '''Chuyển đổi dictionary {dict_data} sang dạng list cho client {exchange_data_list}'''
 
     exchange_data_list = []
-    exchange_data_list.append(dict_data["date_time"])
+    exchange_data_list.append("   %s" %dict_data["date_time"])
 
-    currency_data = "Currency: %s" % dict_data["results"]["currency"]
+    currency_data = "   - Currency: %s" % dict_data["results"]["currency"]
     exchange_data_list.append(currency_data)
 
-    buy_cash_data = "Buy cash: %s" % dict_data["results"]["buy_cash"]
+    buy_cash_data = "   - Buy cash: %s" % dict_data["results"]["buy_cash"]
     exchange_data_list.append(buy_cash_data)
 
-    buy_transfer_data = "Buy transfer: %s" % dict_data["results"]["buy_transfer"]
+    buy_transfer_data = "   - Buy transfer: %s" % dict_data["results"]["buy_transfer"]
     exchange_data_list.append(buy_transfer_data)
 
-    sell_data = "Sell: %s" % dict_data["results"]["sell"]
+    sell_data = "   - Sell: %s" % dict_data["results"]["sell"]
     exchange_data_list.append(sell_data)
 
     return exchange_data_list
@@ -118,3 +118,26 @@ def saveUserHistory(user_name, new_data, filename='users_history.json'):
             users_data.append(new_user)
             file.seek(0)
             json.dump(file_data, file, indent=2)
+
+def sendUserHistory(user_name, filename='users_history.json'):
+    history_data = []
+    with open(filename, 'r+') as file:
+        file_data = json.load(file)
+        users_data = file_data["users_history"]
+        for user in users_data:
+            if user["name"] == user_name:
+                history_data = convertUserHistoryData(user["history"])
+                break
+    # print(history_data)
+    return history_data
+
+def convertUserHistoryData(user_history_data):
+    history_data = []
+    for item in user_history_data:
+        new_data = dictToDataSendClient(item)
+        history_data.append(new_data)
+
+    return history_data
+
+
+# print(sendUserHistory("A"))
