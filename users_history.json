@@ -12,6 +12,151 @@
             "buy_transfer": 15853.31,
             "sell": 16350.48
           }
+        },
+        {
+          "date_time": "04/12/2021, 11:43:47",
+          "results": {
+            "currency": "JPY",
+            "buy_cash": 195.3,
+            "buy_transfer": 197.27,
+            "sell": 206.56
+          }
+        },
+        {
+          "date_time": "03/12/2021, 23:50:24",
+          "results": {
+            "currency": "JPY",
+            "buy_cash": 195.3,
+            "buy_transfer": 197.27,
+            "sell": 206.56
+          }
+        },
+        {
+          "date_time": "04/12/2021, 21:09:19",
+          "results": {
+            "currency": "CNY",
+            "buy_cash": 3508.51,
+            "buy_transfer": 3543.95,
+            "sell": 3655.64
+          }
+        },
+        {
+          "date_time": "03/12/2021, 23:50:24",
+          "results": {
+            "currency": "AUD",
+            "buy_cash": 15694.78,
+            "buy_transfer": 15853.31,
+            "sell": 16350.48
+          }
+        }
+      ]
+    },
+    {
+      "name": "A",
+      "history": [
+        {
+          "date_time": "03/12/2021, 23:50:24",
+          "results": {
+            "currency": "AUD",
+            "buy_cash": 15694.78,
+            "buy_transfer": 15853.31,
+            "sell": 16350.48
+          }
+        },
+        {
+          "date_time": "03/12/2021, 23:50:24",
+          "results": {
+            "currency": "USD",
+            "buy_cash": 22670.0,
+            "buy_transfer": 22700.0,
+            "sell": 22940.0
+          }
+        },
+        {
+          "date_time": "04/12/2021, 21:09:19",
+          "results": {
+            "currency": "CNY",
+            "buy_cash": 3508.51,
+            "buy_transfer": 3543.95,
+            "sell": 3655.64
+          }
+        },
+        {
+          "date_time": "04/12/2021, 21:09:19",
+          "results": {
+            "currency": "AUD",
+            "buy_cash": 15694.78,
+            "buy_transfer": 15853.31,
+            "sell": 16350.48
+          }
+        },
+        {
+          "date_time": "04/12/2021, 21:09:19",
+          "results": {
+            "currency": "JPY",
+            "buy_cash": 195.3,
+            "buy_transfer": 197.27,
+            "sell": 206.56
+          }
+        },
+        {
+          "date_time": "03/12/2021, 23:50:24",
+          "results": {
+            "currency": "USD",
+            "buy_cash": 22670.0,
+            "buy_transfer": 22700.0,
+            "sell": 22940.0
+          }
+        },
+        {
+          "date_time": "04/12/2021, 21:09:19",
+          "results": {
+            "currency": "JPY",
+            "buy_cash": 195.3,
+            "buy_transfer": 197.27,
+            "sell": 206.56
+          }
+        },
+        {
+          "date_time": "03/12/2021, 23:50:24",
+          "results": {
+            "currency": "CNY",
+            "buy_cash": 3508.51,
+            "buy_transfer": 3543.95,
+            "sell": 3655.64
+          }
+        },
+        {
+          "date_time": "04/12/2021, 21:09:19",
+          "results": {
+            "currency": "USD",
+            "buy_cash": 22670.0,
+            "buy_transfer": 22700.0,
+            "sell": 22940.0
+          }
+        }
+      ]
+    },
+    {
+      "name": "B",
+      "history": [
+        {
+          "date_time": "04/12/2021, 16:37:55",
+          "results": {
+            "currency": "JPY",
+            "buy_cash": 195.3,
+            "buy_transfer": 197.27,
+            "sell": 206.56
+          }
+        },
+        {
+          "date_time": "04/12/2021, 16:37:55",
+          "results": {
+            "currency": "AUD",
+            "buy_cash": 15694.78,
+            "buy_transfer": 15853.31,
+            "sell": 16350.48
+          }
         }
       ]
     }

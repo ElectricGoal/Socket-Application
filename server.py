@@ -5,6 +5,7 @@ import tkinter as tk
 import api as api
 import pickle
 import time
+from datetime import datetime
 
 
 def accept_incoming_connections():
@@ -20,23 +21,22 @@ def accept_incoming_connections():
             print("%s:%s has connected." % client_address)
 
             # Gửi lời chào mừng tới client
-            client.send(
-                bytes("   Greetings from server! Now type your name and press enter!", FORMAT))
+            # client.send(
+            #     bytes("    Greetings from server! Now type your name and press enter!", FORMAT))
 
             # Bắt đầu tiến trình giao tiếp với client
-            Thread(target=handle_client, args=(client,)).start()
+            user_name = "A"
+            Thread(target=handle_client, args=(client, user_name)).start()
     except:
         # Trường hợp server bị lỗi
         print("Error")
 
 
 # Takes client socket as argument
-def handle_client(client):
+def handle_client(client, name):
     '''Handles a single client connection'''
 
-    # Nhận tên {name} của client
-    name = client.recv(BUFSIZ).decode(FORMAT)
-    welcome = '   Welcome %s! If you ever want to quit, type {quit} to exit.' % name
+    welcome = '    Welcome %s! Please read the Instruction and tell me your requests' % name
 
     # Server gửi {welcome} tới client
     client.send(bytes(welcome, FORMAT))
@@ -44,38 +44,45 @@ def handle_client(client):
     # Khởi tạp biến {msg} dùng trong giao tiếp giữa server vs client
     msg = None
 
-    # Nếu server nhận {quit} thì ngắt kết nối tới client
-    while msg != "{quit}":
+    date = datetime.now().strftime("%d/%m/%Y")
+
+    while True:
         try:
             msg = client.recv(BUFSIZ).decode(FORMAT)
 
             # In ra màn hình console server {msg} của client gửi tới server
             print(name, ': ', msg)
 
-            # if msg != bytes("{quit}", FORMAT):
-            #     client.send(bytes(msg, FORMAT))
-
+            if (api.is_date(msg)):
+                date = msg
+                set_date_msg = "   Set date: %s" %date
+                client.send(bytes(set_date_msg, FORMAT))
+                continue
             
-
+            time.sleep(0.7)
             if msg == "history":
                 client.send(bytes("yrotsih", FORMAT))
                 history_data = api.sendUserHistory(name)
-                data_send = pickle.dumps(history_data)
-                client.send(data_send)
+                for item in history_data:
+                    data_send = pickle.dumps(item)
+                    client.send(data_send)
+                    client.recv(BUFSIZ).decode(FORMAT)
+                client.send(bytes("end", FORMAT))
 
             else:
-                reply_dict = api.find_currency(msg)
+                reply_dict = api.find_date(msg, date)
 
-                if (reply_dict == "Cannot find"):
-                    client.send(bytes("Cannot find", FORMAT))
+                if (reply_dict == {}):
+                    client.send(bytes("   Sorry, I can't fulfill this request :(", FORMAT))
                 elif (reply_dict):
                     client.send(bytes("tsillist", FORMAT))
                     reply = api.dictToDataSendClient(reply_dict)
+                    print(reply)
                     api.saveUserHistory(name, reply_dict)
                     data_send = pickle.dumps(reply)
                     client.send(data_send)
                 else:
-                    client.send(bytes("  Something went wrong!", FORMAT))
+                    client.send(bytes("   Something went wrong!", FORMAT))
 
         except:
             '''Phát hiện client ngắt kết nối tới server'''

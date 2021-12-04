@@ -3,47 +3,69 @@ import tkinter as tk
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import pickle
-from babel.dates import DateTimePattern
-from tkcalendar import Calendar, DateEntry
+# from babel.dates import DateTimePattern
+from tkcalendar import DateEntry
+import time
 
 class ChatPage(tk.Frame):
     '''Màn hình chat của client'''
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
 
+        bg = "aliceblue"
+
         # For the messages to be sent.
         self.my_msg = tk.StringVar()  
         self.my_msg.set("Type your messages here.")
         
         #Frame bên trái
-        left_frame = tk.Frame(self)
+        left_frame = tk.Frame(self, width=400, bg = bg)
         left_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
+
+        #Frame bên phải
+        right_frame = tk.Frame(self, width=300, bg = bg)
+        right_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
         msg_frame = tk.Frame(left_frame)
         msg_frame.pack(fill=tk.BOTH, expand=True)
-        scrollbar = tk.Scrollbar(msg_frame)
-        self.msg_list = tk.Listbox(msg_frame, yscrollcommand=scrollbar.set, bg='light yellow')
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.msg_list.pack(fill=tk.BOTH, expand=True)
-        
 
+        scrollbar = tk.Scrollbar(msg_frame, orient="vertical")
+        self.msg_list = tk.Listbox(msg_frame, width=50, height=20, bg='light yellow', yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.msg_list.yview)
+
+        scrollbar.pack(side= tk.RIGHT, fill=tk.Y)
+        self.msg_list.pack(side=tk.LEFT, fill= tk.BOTH, expand=True)
+        
         entry_field = tk.Entry(left_frame, textvariable=self.my_msg)
-        entry_field.pack(fill=tk.BOTH)
+        entry_field.pack(fill=tk.BOTH, pady=2, padx=3)
 
-        send_button = tk.Button(left_frame, text="Send", command=self.send)
-        send_button.pack()
+        send_button = tk.Button(left_frame, text="Send", command=self.send, background= "cornflowerblue", fg = "ghostwhite")
+        send_button.pack(fill=tk.BOTH, pady=2, padx=3)
         
-        #Frame bên phải
-        right_frame = tk.Frame(self)
-        right_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
+        
+        date_label = tk.Label(right_frame, text= "Date picker", foreground="navy", bg = bg)
+        self.cal = DateEntry(right_frame, width= 16, background= "cornflowerblue", foreground= "ghostwhite",bd=2, date_pattern='dd/mm/y')
+        date_label.pack(pady=5)
+        date_label.config(font=("Arial", 12))
+        self.cal.pack(pady=1)
+        tk.Button(right_frame, text = "Get Date", bg = "cornflowerblue", fg = "ghostwhite", command = self.grad_date).pack(pady=(5, 25))
+        
+        instruction_label = tk.Label(right_frame, text= "Instruction", foreground="navy", bg=bg)
 
-        text_label = tk.Label(right_frame, text= "Choose a Date", background= 'gray61', foreground="white")
-        cal = DateEntry(right_frame, width= 16, background= "magenta3", foreground= "white",bd=2, date_pattern='dd/mm/y')
-        text_label.pack()
-        cal.pack()
+        instruction_text = "- Enter the currency code you want to\nexchange to VND (ex: USD, JPY, AUD,...)\n\n- Enter \"history\" if you want to see your\nsearching history\n\n-To find the exchange rate of a particular\ndate, you need to change the date in\nDate picker section"
+
+        instruction_label.pack(fill=tk.BOTH)
+        instruction_label.config(font=("Arial", 12))
+        tk.Label(right_frame, text=instruction_text, anchor='w', justify= tk.LEFT, bg = bg).pack()
+        
+        tk.Button(right_frame, text = "Quit", command = self.on_closing, bg="red", fg="white").pack(anchor="se", side=tk.BOTTOM, pady=2, padx=2)
 
 
-    
+    def grad_date(self):
+        print( "Selected Date is: " + self.cal.get_date().strftime("%d/%m/%Y"))
+        date = self.cal.get_date().strftime("%d/%m/%Y")
+        client_socket.send(bytes(date, "utf8"))
+
     # event is passed by binders.
     def send(self):  
         """Handles sending of messages."""
@@ -51,16 +73,15 @@ class ChatPage(tk.Frame):
 
         # Clears input field.
         self.my_msg.set("") 
-        client_socket.send(bytes(msg, "utf8"))
-        self.msg_list.insert(tk.END, "You: %s" %msg)
-        if msg == "{quit}":
-            client_socket.close()
-            self.quit()
+        self.msg_list.insert(tk.END, " [YOU]: %s" %msg)
+        client_socket.send(bytes(msg, FORMAT))
+            
             
     def on_closing(self):
         """This function is to be called when the window is closed."""
-        self.my_msg.set("{quit}")
-        self.send()
+        client_socket.close()
+        self.quit()
+        quit()
 
     def receive(self):
         """Handles receiving of messages."""
@@ -69,24 +90,26 @@ class ChatPage(tk.Frame):
                 msg = client_socket.recv(BUFSIZ).decode(FORMAT)
 
                 if msg == "yrotsih":
-                    msg = client_socket.recv(BUFSIZ)
-                    data_recv = pickle.loads(msg)
-                    self.msg_list.insert(tk.END, "Server: ")
-                    for items in data_recv:
-                        for item in items:
+                    self.msg_list.insert(tk.END, " [SERVER]: ")
+                    while True:
+                        msg = client_socket.recv(BUFSIZ)
+                        if (msg == b'end'):
+                            break
+                        data_recv = pickle.loads(msg)
+                        for item in data_recv:
                             self.msg_list.insert(tk.END, item)
-                        self.msg_list.insert(tk.END, "   ---------------------")
+                        client_socket.send(bytes("sc", FORMAT))
                     continue
 
                 if msg == "tsillist":
                     msg = client_socket.recv(BUFSIZ)
                     data_recv = pickle.loads(msg)
-                    self.msg_list.insert(tk.END, "Server: ")
+                    self.msg_list.insert(tk.END, " [SERVER]: ")
                     for item in data_recv:
                         self.msg_list.insert(tk.END, item)
                     
                 else:
-                    self.msg_list.insert(tk.END, "Server: ")
+                    self.msg_list.insert(tk.END, " [SERVER]: ")
                     self.msg_list.insert(tk.END, msg)
 
             # Possibly client has left the chat.

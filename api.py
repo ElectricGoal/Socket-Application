@@ -1,6 +1,7 @@
 import pip._vendor.requests as requests
 import json
 from datetime import datetime
+from dateutil.parser import parse
 
 '''
 CÁC GIÁ TRỊ MẶC ĐỊNH, KHÔNG ĐƯỢC THAY ĐỔI
@@ -38,26 +39,37 @@ def write_json(new_data, filename='data.json'):
         json.dump(file_data, file, indent=2)
 
 
-def find_currency(currency):
+def find_date(currency, date):
     '''Tìm dữ liệu của {currency} và trả về {exchange_data} kiểu dictionary'''
 
     #Mở file data.json
     f = open('data.json')
     data = json.load(f)
-    
-    #Biến kiểm tra có dữ liệu client đang tìm không
-    check = False
 
     exchange_data = {}
 
-    for item in data["exchange_history"][-1]["results"]:
+    exchange_list = data["exchange_history"]
+    length = len(exchange_list)
 
-        #Tìm kiếm giá trị currency giống với giá trị client đang tìm kiếm
+    for i in range(length):
+        # check = exchange_list[i]["date_time"].find(date)
+        if (exchange_list[i]["date_time"].find(date) != -1) and (i == (length - 1)):
+            exchange_data = find_currency(currency, exchange_list[i])
+            break
+        elif exchange_list[i]["date_time"].find(date) != (-1) and exchange_list[i+1]["date_time"].find(date) == -1:
+            exchange_data = find_currency(currency, exchange_list[i])
+            break
+
+    print(exchange_data)
+
+    return exchange_data
+
+def find_currency(currency, exchange_list):
+    exchange_data = {}
+    for item in exchange_list["results"]:
         if currency == item["currency"]:
-            check = True
-
             exchange_data = {
-                "date_time": data["exchange_history"][-1]["date_time"],
+                "date_time": exchange_list["date_time"],
                 "results": {
                     "currency": item["currency"],
                     "buy_cash": item["buy_cash"],
@@ -65,10 +77,7 @@ def find_currency(currency):
                     "sell": item["sell"]
                 }
             }
-
-    if check == False:
-        return "   Cannot find"
-
+            return exchange_data
     return exchange_data
 
 
@@ -76,18 +85,18 @@ def dictToDataSendClient(dict_data):
     '''Chuyển đổi dictionary {dict_data} sang dạng list cho client {exchange_data_list}'''
 
     exchange_data_list = []
-    exchange_data_list.append("   %s" %dict_data["date_time"])
+    exchange_data_list.append("    %s" %dict_data["date_time"])
 
-    currency_data = "   - Currency: %s" % dict_data["results"]["currency"]
+    currency_data = "     - Currency: %s" % dict_data["results"]["currency"]
     exchange_data_list.append(currency_data)
 
-    buy_cash_data = "   - Buy cash: %s" % dict_data["results"]["buy_cash"]
+    buy_cash_data = "     - Buy cash: %s" % dict_data["results"]["buy_cash"]
     exchange_data_list.append(buy_cash_data)
 
-    buy_transfer_data = "   - Buy transfer: %s" % dict_data["results"]["buy_transfer"]
+    buy_transfer_data = "     - Buy transfer: %s" % dict_data["results"]["buy_transfer"]
     exchange_data_list.append(buy_transfer_data)
 
-    sell_data = "   - Sell: %s" % dict_data["results"]["sell"]
+    sell_data = "    - Sell: %s" % dict_data["results"]["sell"]
     exchange_data_list.append(sell_data)
 
     return exchange_data_list
@@ -139,5 +148,17 @@ def convertUserHistoryData(user_history_data):
 
     return history_data
 
+def is_date(string, fuzzy=False):
+    """
+    Return whether the string can be interpreted as a date.
 
-# print(sendUserHistory("A"))
+    :param string: str, string to check for date
+    :param fuzzy: bool, ignore unknown tokens in string if True
+    """
+    try: 
+        parse(string, fuzzy=fuzzy)
+        return True
+
+    except ValueError:
+        return False
+
