@@ -2,7 +2,7 @@ from socket import AF_INET, socket, SOCK_STREAM
 import socket as sk
 from threading import Thread
 import tkinter as tk
-import api as api
+import server_components as svc
 import pickle
 import time
 from datetime import datetime
@@ -20,12 +20,10 @@ def accept_incoming_connections():
             server_app.insertMsg(client_connected)
             print("%s:%s has connected." % client_address)
 
-            # Gửi lời chào mừng tới client
-            # client.send(
-            #     bytes("    Greetings from server! Now type your name and press enter!", FORMAT))
-
             # Bắt đầu tiến trình giao tiếp với client
-            user_name = "A"
+            # Cài đặt user_name tại đây, sau khi phần đăng nhập hoặc đăng kí kết thúc
+            # có thể dùng 1 hàm để truyền {user_name} ngay tại đây
+            user_name = "B"
             Thread(target=handle_client, args=(client, user_name)).start()
     except:
         # Trường hợp server bị lỗi
@@ -43,45 +41,84 @@ def handle_client(client, name):
 
     # Khởi tạp biến {msg} dùng trong giao tiếp giữa server vs client
     msg = None
-
+    
+    # Khởi tạo biến {date} để lưu ngày tháng hiện tại làm giá trị default
     date = datetime.now().strftime("%d/%m/%Y")
 
     while True:
         try:
+            # Nhận tin nhắn từ client
             msg = client.recv(BUFSIZ).decode(FORMAT)
 
             # In ra màn hình console server {msg} của client gửi tới server
+            # Dùng để check, có thể xoá sau khi hoàn thành
             print(name, ': ', msg)
-
-            if (api.is_date(msg)):
+            
+            # Kiểm tra tin nhắn vừa nhận có phải là ngày tháng ko
+            # Nếu có thì {date = msg} và gửi tin nhắn tới client
+            if (svc.is_date(msg)):
                 date = msg
                 set_date_msg = "   Set date: %s" %date
                 client.send(bytes(set_date_msg, FORMAT))
                 continue
             
+            # Tạo độ delay cho server để cho giống một đoạn chat thật
             time.sleep(0.7)
-            if msg == "history":
+
+            # Kiểm tra tin nhắn vừa được gửi tới có phải là "history" ko
+            if msg.lower() == "history":
+                # Nếu có thì gửi tin nhắn này tới client
+                # để cho client chuẩn bị nhận thông tin lịch sử người dùng
                 client.send(bytes("yrotsih", FORMAT))
-                history_data = api.sendUserHistory(name)
+
+                # Tìm kiếm lịch sử người dùng thông qua tên người dùng {name}
+                history_data = svc.findUserHistory(name)
+
+                # {history_data} có kiểu list bao gồm nhiều list khác nhau
+                # Vd: history_data = [[data1, data2, data3], [data4, data5, data6], [data7, data8, data9]]
+
+                # Bắt đầu gửi user history data tới client
                 for item in history_data:
+                    # Dùng pickle để gửi data kiểu list tới người dùng
                     data_send = pickle.dumps(item)
                     client.send(data_send)
+                    
+                    # Nhận tin nhắn từ client để biết đã gửi thành công và tránh lỗi xảy ra
                     client.recv(BUFSIZ).decode(FORMAT)
+                # Gửi tới client tin nhắn thông báo kết thúc quá trình
                 client.send(bytes("end", FORMAT))
 
             else:
-                reply_dict = api.find_date(msg, date)
-
+                # Tìm dữ liệu trong thời điểm mà user yêu cầu thông qua biến {date}
+                # và {msg}, trong đó msg nếu như đúng là mã tiền tệ (ex: USD) còn
+                # date là ngày tháng
+                reply_dict = svc.find_currency(msg, date)
+                
+                # Kiểm tra nếu như không có dữ liệu thì gửi tin nhắn như dưới tới client
                 if (reply_dict == {}):
                     client.send(bytes("   Sorry, I can't fulfill this request :(", FORMAT))
+
+                # Trường hợp có dữ liệu
                 elif (reply_dict):
+                    # Gửi tin nhắn này tới client để cho client chuẩn bị nhận thông tin user yêu cầu
                     client.send(bytes("tsillist", FORMAT))
-                    reply = api.dictToDataSendClient(reply_dict)
+
+                    #Chuyển đổi từ dạng dictionary sang list để có thể gửi tới client
+                    # {reply_dict} có kiểu dictionary
+                    # {reply} có kiểu list
+                    reply = svc.dictToDataSendClient(reply_dict)
+
+                    # Kiểm tra, có thể xoá khi hoàn thành
                     print(reply)
-                    api.saveUserHistory(name, reply_dict)
+
+                    # Lưu data vừa lấy được vào lịch sử người dùng
+                    svc.saveUserHistory(name, reply_dict)
+
+                    # Gửi data tới client
                     data_send = pickle.dumps(reply)
                     client.send(data_send)
                 else:
+                    # Trường hợp xảy ra lỗi ngoài ý muốn
                     client.send(bytes("   Something went wrong!", FORMAT))
 
         except:
@@ -107,14 +144,14 @@ def updateData():
     '''Upadate data mới sau mỗi 30 phút'''
 
     # Lúc bắt đầu khởi động, lấy data về
-    # api.getDataFromAPI()
+    svc.getDataFromAPI()
 
     while True:
         # Đếm ngược 30 phút
         countdown(1800)
 
         # Lấy data mới
-        api.getDataFromAPI()
+        svc.getDataFromAPI()
 
 
 class ServerApp(tk.Tk):

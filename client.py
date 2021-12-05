@@ -3,9 +3,7 @@ import tkinter as tk
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import pickle
-# from babel.dates import DateTimePattern
 from tkcalendar import DateEntry
-import time
 
 class ChatPage(tk.Frame):
     '''Màn hình chat của client'''
@@ -18,17 +16,19 @@ class ChatPage(tk.Frame):
         self.my_msg = tk.StringVar()  
         self.my_msg.set("Type your messages here.")
         
-        #Frame bên trái
+        # Frame bên trái màn hình
         left_frame = tk.Frame(self, width=400, bg = bg)
         left_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
-        #Frame bên phải
+        # Frame bên phải màn hình
         right_frame = tk.Frame(self, width=300, bg = bg)
         right_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
-
+        
+        # Frame phần khung chat
         msg_frame = tk.Frame(left_frame)
         msg_frame.pack(fill=tk.BOTH, expand=True)
-
+        
+        # Ô hiện tin nhắn và thanh trượt
         scrollbar = tk.Scrollbar(msg_frame, orient="vertical")
         self.msg_list = tk.Listbox(msg_frame, width=50, height=20, bg='light yellow', yscrollcommand=scrollbar.set)
         scrollbar.config(command=self.msg_list.yview)
@@ -36,13 +36,15 @@ class ChatPage(tk.Frame):
         scrollbar.pack(side= tk.RIGHT, fill=tk.Y)
         self.msg_list.pack(side=tk.LEFT, fill= tk.BOTH, expand=True)
         
+        # Ô chat tin nhắn
         entry_field = tk.Entry(left_frame, textvariable=self.my_msg)
         entry_field.pack(fill=tk.BOTH, pady=2, padx=3)
-
+        
+        # Nút gửi tin nhắn
         send_button = tk.Button(left_frame, text="Send", command=self.send, background= "cornflowerblue", fg = "ghostwhite")
         send_button.pack(fill=tk.BOTH, pady=2, padx=3)
         
-        
+        # Phần Date picker
         date_label = tk.Label(right_frame, text= "Date picker", foreground="navy", bg = bg)
         self.cal = DateEntry(right_frame, width= 16, background= "cornflowerblue", foreground= "ghostwhite",bd=2, date_pattern='dd/mm/y')
         date_label.pack(pady=5)
@@ -50,19 +52,21 @@ class ChatPage(tk.Frame):
         self.cal.pack(pady=1)
         tk.Button(right_frame, text = "Get Date", bg = "cornflowerblue", fg = "ghostwhite", command = self.grad_date).pack(pady=(5, 25))
         
+        # Phần Instruction
         instruction_label = tk.Label(right_frame, text= "Instruction", foreground="navy", bg=bg)
 
-        instruction_text = "- Enter the currency code you want to\nexchange to VND (ex: USD, JPY, AUD,...)\n\n- Enter \"history\" if you want to see your\nsearching history\n\n-To find the exchange rate of a particular\ndate, you need to change the date in\nDate picker section"
+        instruction_text = "- Enter the currency code you want to\nexchange to VND (ex: USD, JPY, AUD,...)\n\n- Enter \"history\" if you want to see your\nrequests history\n\n-To find the exchange rate of a particular\ndate, you need to change the date in Date\npicker section and press the \"Get Date\"\nbutton. The default date value is today"
 
         instruction_label.pack(fill=tk.BOTH)
         instruction_label.config(font=("Arial", 12))
         tk.Label(right_frame, text=instruction_text, anchor='w', justify= tk.LEFT, bg = bg).pack()
         
+        # Nút thoat chương trình
         tk.Button(right_frame, text = "Quit", command = self.on_closing, bg="red", fg="white").pack(anchor="se", side=tk.BOTTOM, pady=2, padx=2)
 
 
     def grad_date(self):
-        print( "Selected Date is: " + self.cal.get_date().strftime("%d/%m/%Y"))
+        '''Gửi ngày tháng tới server'''
         date = self.cal.get_date().strftime("%d/%m/%Y")
         client_socket.send(bytes(date, "utf8"))
 
@@ -87,27 +91,40 @@ class ChatPage(tk.Frame):
         """Handles receiving of messages."""
         while True:
             try:
+                # Nhận tin nhắn từ server
                 msg = client_socket.recv(BUFSIZ).decode(FORMAT)
-
+                
+                # Phát hiện server đang muốn gửi thông tin user history
                 if msg == "yrotsih":
+                    # Chèn vào khung chat
                     self.msg_list.insert(tk.END, " [SERVER]: ")
                     while True:
+                        # Nhận tin nhắn từ server
                         msg = client_socket.recv(BUFSIZ)
+
+                        # Phát hiện kết thúc
                         if (msg == b'end'):
                             break
+
+                        # Chuyển đổi data bằng pickle và chèn lên khung chat
                         data_recv = pickle.loads(msg)
                         for item in data_recv:
                             self.msg_list.insert(tk.END, item)
                         client_socket.send(bytes("sc", FORMAT))
                     continue
-
+                
+                # Phát hiện server đang muốn gửi thông tin currency code user yêu cầu
                 if msg == "tsillist":
+                    # Nhận tin nhắn từ server
                     msg = client_socket.recv(BUFSIZ)
+
+                    # Chuyển đổi data bằng pickle và chèn lên khung chat
                     data_recv = pickle.loads(msg)
                     self.msg_list.insert(tk.END, " [SERVER]: ")
                     for item in data_recv:
                         self.msg_list.insert(tk.END, item)
-                    
+                
+                # Trường hợp khác
                 else:
                     self.msg_list.insert(tk.END, " [SERVER]: ")
                     self.msg_list.insert(tk.END, msg)
@@ -154,7 +171,7 @@ class ClientApp(tk.Tk):
         tk.Tk.__init__(self)
         
         #Khởi tạo khung của cửa sổ client
-        self.title("Currency converter")
+        self.title("Exchange rate")
         self.geometry("700x400")
         self.resizable(width=False, height=False)
 
