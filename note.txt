@@ -1,0 +1,51 @@
+1. Để chạy server, run file server.py
+2. Để chạy client, run file client.py
+3. File server_components.py là file hỗ trợ của server.py, luôn đi kèm với server.py
+4. Khi khởi động server, server sẽ lấy data từ api (third party) về và lưu vào file data.json
+5. Data vừa được lưu sẽ bao gồm data từ api: tỉ giá tiền tệ và thời gian tại thời điểm lưu
+ex: {
+      "results": [  //Data lấy từ api
+        {
+          "buy_cash": 15694.78,
+          "buy_transfer": 15853.31,
+          "currency": "AUD",
+          "sell": 16350.48
+        },
+        {
+          "buy_cash": 17344.8,
+          "buy_transfer": 17520.0,
+          "currency": "CAD",
+          "sell": 18069.44
+        }
+      ],
+      "date_time": "03/12/2021, 21:50:00"  //Thời gian tại thời điểm lưu
+    }
+6. Khi user tìm tỉ giá tiền tệ thì data sẽ lưu về file users_history.json
+ex: {
+      "name": "T",  //Tên user (user_name) 
+      "history": [                                   //Lịch sử tìm kiếm của user
+        {                                            //Data mà người dùng tìm kiếm tại lần kề lần gần nhất 
+          "date_time": "05/12/2021, 21:47:13",       //Thời điểm server nhận data từ api về, không phải thời điểm người dùng tìm kiếm data này 
+          "results": {
+            "currency": "CAD",
+            "buy_cash": 17344.8,
+            "buy_transfer": 17520.0,
+            "sell": 18069.44
+          }
+        },
+        {                                            //Data mà người dùng tìm kiếm tại lần gần nhất 
+          "date_time": "05/12/2021, 22:03:56",
+          "results": {
+            "currency": "CAD",
+            "buy_cash": 17344.8,
+            "buy_transfer": 17520.0,
+            "sell": 18069.44
+          }
+        }
+      ]
+    }
+7. Dòng 24 đến dòng 29 trong file server.py nói về việc cài đặt user_name cho chương trình
+   Ở đây, mình đã đặt cứng nó là user_name = "A" 
+         - Mình code chương trình tìm dữ liệu dựa vào tên user_name
+         - Ví dụ ở đây user_name = "A", khi cần tìm kiếm lịch sử thì chương trình tìm data có tên là "A" để trích xuất dữ liệu
+   Sau khi làm phần đăng nhập, đăng kí xong có thể tạo một hàm để truyền user_name vào cho nó
