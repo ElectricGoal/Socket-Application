@@ -7,6 +7,7 @@ import pickle
 import time
 from datetime import datetime
 
+api_connection = True
 
 def accept_incoming_connections():
     '''Sets up handling for incoming clients'''
@@ -21,9 +22,10 @@ def accept_incoming_connections():
             print("%s:%s has connected." % client_address)
 
             # Bắt đầu tiến trình giao tiếp với client
-            # Cài đặt user_name tại đây, sau khi phần đăng nhập hoặc đăng kí kết thúc
-            # có thể dùng 1 hàm để truyền {user_name} ngay tại đây
-            user_name = "B"
+            # Lấy dữ liệu user_name (tên người dùng) sau khi phần đăng nhập hoặc đăng kí kết thúc
+            # Có thể dùng 1 hàm để truyền {user_name} ngay tại đây
+            # Ví dụ ở đây lấy user_name là A
+            user_name = "A"
             Thread(target=handle_client, args=(client, user_name)).start()
     except:
         # Trường hợp server bị lỗi
@@ -33,6 +35,7 @@ def accept_incoming_connections():
 # Takes client socket as argument
 def handle_client(client, name):
     '''Handles a single client connection'''
+    global api_connection
 
     welcome = '    Welcome %s! Please read the Instruction and tell me your requests' % name
 
@@ -43,8 +46,9 @@ def handle_client(client, name):
     msg = None
     
     # Khởi tạo biến {date} để lưu ngày tháng hiện tại làm giá trị default
+    # Công dụng biến này dùng để biết user đang chọn ngày tháng nào để trích xuất dữ liệu
     date = datetime.now().strftime("%d/%m/%Y")
-
+    
     while True:
         try:
             # Nhận tin nhắn từ client
@@ -76,6 +80,11 @@ def handle_client(client, name):
 
                 # {history_data} có kiểu list bao gồm nhiều list khác nhau
                 # Vd: history_data = [[data1, data2, data3], [data4, data5, data6], [data7, data8, data9]]
+                
+                # Kiểm tra nếu không có lịch sử của user (do user là người dùng mới)
+                if history_data == []:
+                    client.send(bytes("Empty", FORMAT))
+                    continue
 
                 # Bắt đầu gửi user history data tới client
                 for item in history_data:
@@ -93,6 +102,11 @@ def handle_client(client, name):
                 # và {msg}, trong đó msg nếu như đúng là mã tiền tệ (ex: USD) còn
                 # date là ngày tháng
                 reply_dict = svc.find_currency(msg, date)
+                
+                # Thông báo với client là server không kết nối với api được nếu {api_connection = False}
+                if api_connection == False:
+                    client.send(bytes("   Unable to connect to API from server :(", FORMAT))
+                    continue
                 
                 # Kiểm tra nếu như không có dữ liệu thì gửi tin nhắn như dưới tới client
                 if (reply_dict == {}):
@@ -128,7 +142,8 @@ def handle_client(client, name):
             # Chèn message vào Listbox tkinter
             server_app.insertMsg(msg)
             break
-
+    print("Halo")
+    
     # Client đóng
     client.close()
 
@@ -142,18 +157,22 @@ def countdown(t):
 
 def updateData():
     '''Upadate data mới sau mỗi 30 phút'''
-
+    global api_connection
     # Lúc bắt đầu khởi động, lấy data về
-    svc.getDataFromAPI()
-
     while True:
+        # Kiểm tra có thể lấy data mới được không
+        check = svc.getDataFromAPI()
+
+        if (check == False):
+            break
+
         # Đếm ngược 30 phút
         countdown(1800)
 
-        # Lấy data mới
-        svc.getDataFromAPI()
+    # Gán biến {api_connection} bằng False
+    api_connection = False
 
-
+        
 class ServerApp(tk.Tk):
     '''
     Server application: Giao diện server sử dụng tkinter

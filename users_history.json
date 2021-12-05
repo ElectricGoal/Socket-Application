@@ -134,6 +134,15 @@
             "buy_transfer": 22700.0,
             "sell": 22940.0
           }
+        },
+        {
+          "date_time": "05/12/2021, 20:17:50",
+          "results": {
+            "currency": "USD",
+            "buy_cash": 22670.0,
+            "buy_transfer": 22700.0,
+            "sell": 22940.0
+          }
         }
       ]
     },
@@ -165,6 +174,29 @@
             "buy_cash": 3508.51,
             "buy_transfer": 3543.95,
             "sell": 3655.64
+          }
+        },
+        {
+          "date_time": "05/12/2021, 21:47:13",
+          "results": {
+            "currency": "CAD",
+            "buy_cash": 17344.8,
+            "buy_transfer": 17520.0,
+            "sell": 18069.44
+          }
+        }
+      ]
+    },
+    {
+      "name": "T",
+      "history": [
+        {
+          "date_time": "05/12/2021, 22:03:56",
+          "results": {
+            "currency": "CAD",
+            "buy_cash": 17344.8,
+            "buy_transfer": 17520.0,
+            "sell": 18069.44
           }
         }
       ]

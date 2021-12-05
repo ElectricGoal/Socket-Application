@@ -1,4 +1,5 @@
 # File bao gồm các thành phần thuộc server, luôn đi kèm với server.py
+
 import pip._vendor.requests as requests
 import json
 from datetime import datetime
@@ -18,12 +19,19 @@ def getDataFromAPI():
 
     # Lấy data từ api
     response = requests.get(url, params=params, headers=headers)
+    
+    # Kiểm tra status code
+    # status code = 200, server kết nối được tới api, ngược lại thì không
+    if (response.status_code != 200):
+        return False
+
     data = response.json()
 
     # Lấy thời gian hiện tại
     data["date_time"] = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
 
     write_json(data)
+    return True
 
 
 def write_json(new_data, filename='data.json'):
@@ -108,6 +116,8 @@ def saveUserHistory(user_name, new_data, filename='users_history.json'):
     Lưu dữ liệu user tìm kiếm vào file users_history.json
     Arguments: tên người dùng {user_name}, data người dùng tìm kiếm {new_data} 
     '''
+    # Biến check kiểm tra có tồn tại user_name trong users_history.json hay không
+    # Nếu có check = True
     check = False
     with open(filename, 'r+') as file:
         file_data = json.load(file)
@@ -118,6 +128,9 @@ def saveUserHistory(user_name, new_data, filename='users_history.json'):
                 user["history"].append(new_data)
                 file.seek(0)
                 json.dump(file_data, file, indent=2)
+
+        # Không thấy tên người dùng
+        # Bắt đầu tạo lịch sử người dùng mới
         if check == False:
             new_user = {
                 "name": user_name,
@@ -138,7 +151,7 @@ def findUserHistory(user_name, filename='users_history.json'):
         for user in users_data:
             if user["name"] == user_name:
                 history_data = convertUserHistoryData(user["history"])
-                break
+                
     # print(history_data)
     return history_data
 

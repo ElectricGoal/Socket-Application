@@ -9,7 +9,8 @@ class ChatPage(tk.Frame):
     '''Màn hình chat của client'''
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
-
+        
+        # Background của giao diện
         bg = "aliceblue"
 
         # For the messages to be sent.
@@ -102,6 +103,10 @@ class ChatPage(tk.Frame):
                         # Nhận tin nhắn từ server
                         msg = client_socket.recv(BUFSIZ)
 
+                        if (msg == b'Empty'):
+                            self.msg_list.insert(tk.END, "   Empty :v")
+                            break
+
                         # Phát hiện kết thúc
                         if (msg == b'end'):
                             break
@@ -123,9 +128,9 @@ class ChatPage(tk.Frame):
                     self.msg_list.insert(tk.END, " [SERVER]: ")
                     for item in data_recv:
                         self.msg_list.insert(tk.END, item)
-                
                 # Trường hợp khác
                 else:
+                    print("Msg: ", msg)
                     self.msg_list.insert(tk.END, " [SERVER]: ")
                     self.msg_list.insert(tk.END, msg)
 
